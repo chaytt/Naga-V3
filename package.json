@@ -26,6 +26,7 @@
     "@sapphire/utilities": "^3.18.2",
     "discord.js": "^14.24.2",
     "dotenv": "^17.2.3",
+    "mongodb": "^7.0.0",
     "mongoose": "^8.19.3",
     "node-cron": "^4.2.1"
   }
