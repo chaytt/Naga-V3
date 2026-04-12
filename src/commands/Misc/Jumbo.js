@@ -43,44 +43,32 @@ class Jumbo extends Command {
         return data;
     }
 
-  async messageRun(message, args) {
-    try {
-        let emoji = await args.pick('string').catch(() => null);
-        let data = this.extractEmoji(message.channel, emoji);
-
-        let embed = {
-            color: this.container.utils.getColor('blue'),
-            title: data.name,
-            image: { url: data.url },
-            footer: { text: `ID: ${data.id}` },
-            timestamp: new Date(this.container.utils.validateSnowflake(data.id))
-        };
-
-        message.channel.send({ embeds: [embed] })
-    } catch (err) { this.container.logger.error(err) }
-  }
-  
-  async chatInputRun(interaction) {
-    try {
-        const emoji = interaction.options.getString('emoji');
-
-        await interaction.deferReply();
-        let data = this.extractEmoji(interaction.channel, emoji);
-
-        let embed = {
-            color: this.container.utils.getColor('blue'),
-            title: data.name,
-            image: { url: data.url },
-            footer: { text: `ID: ${data.id}` },
-            timestamp: new Date(this.container.utils.validateSnowflake(data.id))
-        };
-
-        interaction.editReply({ embeds: [embed] })
-    } catch (err) {
-      console.error(err);
-      interaction.editReply(`An error occurred: \`\`\`${err}\`\`\``)
+    jumbo(messageOrInteraction, emoji) {
+        try {
+            let data = this.extractEmoji(messageOrInteraction.channel, emoji);
+            let embed = {
+                color: this.container.utils.getColor('blue'),
+                title: data.name,
+                image: { url: data.url },
+                footer: { text: `ID: ${data.id}` },
+                timestamp: new Date(this.container.utils.validateSnowflake(data.id))
+            };
+            this.container.utils.sendMessage(messageOrInteraction.channel, { embeds: [embed] });
+        } catch (err) {
+            this.container.utils.sendError(messageOrInteraction.channel, err);
+        }
     }
-  }
-}
+
+    async messageRun(message, args) {
+        let emoji = await args.pick('string').catch(() => null);
+        this.jumbo(message, emoji);
+    }
+  
+    async chatInputRun(interaction) {
+        const emoji = interaction.options.getString('emoji');
+        await interaction.deferReply();
+        this.jumbo(interaction, emoji);
+    }
+};
 
 module.exports = { Jumbo };

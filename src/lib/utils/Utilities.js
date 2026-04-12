@@ -81,7 +81,6 @@ class Utilities {
           blue: 9031664,
           darkblue: 26544,
           pink: 16736378,
-          spotify: 1947988,
           discordgrey: 2632496,
           lotus: 15913095,
           whitelotus: 15458257,
@@ -91,6 +90,18 @@ class Utilities {
       };
       return colors[color];
   }
+
+    async sendMessage(channelOrInteraction, content, options) {
+        if (channelOrInteraction.isChatInputCommand?.()) {
+            if (channelOrInteraction.deferred) {
+                return await channelOrInteraction.editReply(content, options);
+            } else {
+                return await channelOrInteraction.reply(content, options);
+            }
+        }
+
+        return await channelOrInteraction.send(content, options);
+    }
 
   async sendSuccess(channelOrInteraction, content) {
     const embeds = [
@@ -134,7 +145,7 @@ class Utilities {
     return Object.keys(object).find(key => object[key] === value);
   }
 
-  hexToRgb(hex) {
+  hexToRGB(hex) {
     const num = parseInt(hex.replace('#', ''), 16);
     return [
       num >> 16,
@@ -155,6 +166,14 @@ class Utilities {
     const num = parseInt(int, 10);
     return `#${num.toString(16).padStart(6, '0')}`;
   }
+
+  /**
+   * Escape special characters in regex
+   */
+  regEscape(str) {
+    return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+  }
+
 
   /**
    * Returns a list of Discord user flags in a human readable format
@@ -187,24 +206,24 @@ class Utilities {
       });
   }
 
-  convertSnowflakeToDate(snowflake, epoch = DISCORD_EPOCH) {
+  convertSnowflakeToDate(snowflake) {
     const milliseconds = BigInt(snowflake) >> 22n
-    return new Date(Number(milliseconds) + epoch)
+    return new Date(Number(milliseconds) + DISCORD_EPOCH)
   }
 
-  validateSnowflake(snowflake, epoch) {
+  validateSnowflake(snowflake) {
     if (!Number.isInteger(+snowflake)) {
-      this.sendError(msg.channel, 'That doesn\'t look like a snowflake. Snowflakes contain only numbers.')
+        throw new Error('That doesn\'t look like a snowflake. Snowflakes contain only numbers.');
     }
   
     if (snowflake < 4194304) {
-        this.sendError(msg.channel, 'That doesn\'t look like a snowflake. Snowflakes are much larger numbers.')
+        throw new Error('That doesn\'t look like a snowflake. Snowflakes are much larger numbers.');
     }
 
-    const timestamp = this.convertSnowflakeToDate(snowflake, epoch)
+    const timestamp = this.convertSnowflakeToDate(snowflake)
 
     if (Number.isNaN(timestamp.getTime())) {
-        this.sendError(msg.channel, 'That doesn\'t look like a snowflake. Snowflakes have fewer digits.')
+        throw new Error('That doesn\'t look like a snowflake. Snowflakes have fewer digits.');
     }
 
     return timestamp;

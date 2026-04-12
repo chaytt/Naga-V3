@@ -18,117 +18,93 @@ class Color extends Command {
     });
   }
 
-  registerApplicationCommands(registry) {
-    registry.registerChatInputCommand((builder) =>
-      builder
-        .setName('color')
-        .setDescription('colors')
-        .addStringOption((option) =>
-          option
-            .setName('hex')
-            .setDescription('A hex code')
-            .setRequired(false)
-        )
-        .addBooleanOption((option) => 
-          option
-            .setName('random')
-            .setDescription('A random color')
-            .setRequired(false)
-        )
-    )
-  }
-
-  hextoRGB(hex) {
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-
-    return [r, g, b];
-  }
-
-  random() {
-    let int = (Math.random() * (1 << 24) | 0)
-    let color = {
-      integer: int,
-      hex: ('00000' + int.toString(16)).slice(-6),
-      rgb: [(int & 0xff0000) >> 16, (int & 0x00ff00) >> 8, (int & 0x0000ff)]
+    registerApplicationCommands(registry) {
+      registry.registerChatInputCommand((builder) =>
+        builder
+          .setName('color')
+          .setDescription('colors')
+          .addStringOption((option) =>
+            option
+              .setName('hex')
+              .setDescription('A hex code')
+              .setRequired(false)
+          )
+          .addBooleanOption((option) => 
+            option
+              .setName('random')
+              .setDescription('A random color')
+              .setRequired(false)
+          )
+      )
     }
-    return color;
-  }
 
-  /**
-   * Fetches color information from API
-   * @param {String} color A color hex code
-   * @returns 
-   */
-  async requestColor(color) {
-    if (!color.match(HEX_REGEX)) color = 'random';
-    if (color === 'random') color = this.random().hex;
-    let colorObj = {
-      name: null,
-      hex: color || null,
-      integer: null,
-      rgb: this.hextoRGB(color),
-      preview: null,
+    random() {
+      let int = (Math.random() * (1 << 24) | 0)
+      let color = {
+        integer: int,
+        hex: ('00000' + int.toString(16)).slice(-6),
+        rgb: [(int & 0xff0000) >> 16, (int & 0x00ff00) >> 8, (int & 0x0000ff)]
+      }
+      return color;
+    }
+
+    /**
+     * Fetches color information from API
+     * @param {String} color A color hex code
+     * @returns 
+     */
+    async color(messageOrInteraction, color) {
+        try {
+            if (!color.match(HEX_REGEX)) color = 'random';
+            if (color === 'random') color = this.random().hex;
+            let colorObj = {
+                name: null,
+                hex: color || null,
+                integer: null,
+                rgb: this.container.utils.hexToRGB(color),
+                preview: null,
+            };
+
+            colorObj.integer = parseInt(`0x${colorObj.hex}`)
+            colorObj.preview = `http://placehold.it/300x300.png/${colorObj.hex}/000000&text=%E2%80%8B`;
+
+            await axios.all([axios.get(`https://www.thecolorapi.com/id?hex=${color}`)]).then(res => {
+              colorObj.name = res[0].data.name.value;
+              colorObj.preview = res[0].data.image.bare;
+            });
+
+            let embed = {
+                title: 'Color',
+                color: colorObj.integer || 0,
+                thumbnail: { url: colorObj.preview },
+                fields: [
+                    { name: 'Name', value: colorObj.name, inline: false },
+                    { name: 'Hex', value: colorObj.hex, inline: false },
+                    { name: 'RGB', value: colorObj.rgb.join(', '), inline: false }
+                ],
+            };
+
+            this.container.utils.sendMessage(messageOrInteraction.channel, { embeds: [embed] });
+        } catch (err) {
+            this.container.utils.sendError(messageOrInteraction.channel, err);
+        }
     };
 
-    colorObj.integer = parseInt(`0x${colorObj.hex}`)
-    colorObj.preview = `http://placehold.it/300x300.png/${colorObj.hex}/000000&text=%E2%80%8B`;
-
-    await axios.all([axios.get(`https://www.thecolorapi.com/id?hex=${color}`)]).then(res => {
-      colorObj.name = res[0].data.name.value;
-      colorObj.preview = res[0].data.image.bare;
-    });
-
-    return colorObj;
-  };
-
-  buildEmbed(color) {
-    let embed = {
-      title: 'Color',
-      color: color.integer || 0,
-      thumbnail: { url: color.preview },
-      fields: [
-          { name: 'Name', value: color.name, inline: false },
-          { name: 'Hex', value: color.hex, inline: false },
-          { name: 'RGB', value: color.rgb.join(', '), inline: false }
-      ],
-    }
-    return embed;
-  }
-
-  async messageRun(message, args) {
-    let colorArg = await args.pick('string').catch(() => null) || this.random().hex;
-
-    try {
-      let color = await this.requestColor(colorArg);
-      let embed = this.buildEmbed(color);
-
-      message.channel.send({ embeds: [embed] })
-    } catch(err) {
-        console.error(err);
-    }
-  }
+    async messageRun(message, args) {
+        let colorArg = await args.pick('string').catch(() => null) || this.random().hex;
+        await this.color(message, colorArg);
+    };
   
-  async chatInputRun(interaction) {
-    const colorArg = interaction.options.getString('hex');
-    const isRandom = interaction.options.getBoolean('random');
+    async chatInputRun(interaction) {
+        const colorArg = interaction.options.getString('hex');
+        const isRandom = interaction.options.getBoolean('random');
 
-    let color = colorArg || this.random().hex;
-    if (isRandom) color = this.random().hex;
+        let color = colorArg || this.random().hex;
+        if (isRandom) color = this.random().hex;
 
-    await interaction.deferReply();
-
-    try {
-      color = await this.requestColor(color);
-      let embed = this.buildEmbed(color);
-
-      return interaction.editReply({embeds: [embed]});
-    } catch (err) {
-      console.error(err);
-      interaction.editReply(`An error occurred: \`\`\`${err}\`\`\``)
+        await interaction.deferReply();
+        await this.color(interaction, color);
     }
-  }
 }
 
 module.exports = { Color };
