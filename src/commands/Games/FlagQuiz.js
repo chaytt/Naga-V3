@@ -1,5 +1,5 @@
 const { Command } = require('@sapphire/framework');
-const flags = Object.entries(require('C:/Users/chayt/Naga-V3/src/commands/Games/codes.json'));
+const flags = Object.entries(require('../../assets/codes.json'));
 const startingMessage = 
 `Guess the succeeding country by its flag in under 30 seconds:
 - First question grants you 300 credits
@@ -34,7 +34,7 @@ class FlagQuiz extends Command {
         
         while (playing) {
             const [code, aliases] = flags[Math.floor(Math.random() * flags.length)];
-            const flagURL = `https://flagcdn.com/w2560/${code}.png`;
+            const flagURL = `https://flagcdn.com/w2560/${code}.png`; // if this cdn ever goes down ill shoot myself
             const validAnswers = aliases.map(a => a.toLowerCase());
             const displayName = aliases[0] || code;
 
