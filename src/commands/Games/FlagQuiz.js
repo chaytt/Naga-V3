@@ -17,10 +17,9 @@ class FlagQuiz extends Command {
         });
     }
 
-
     // n. command
     async messageRun(message) {
-        await channel.send(startingMessage)
+        await message.channel.send(startingMessage);
         return this.runQuiz(message.channel, message.author);
     }
 
@@ -29,15 +28,18 @@ class FlagQuiz extends Command {
         await interaction.reply(startingMessage);
         return this.runQuiz(interaction.channel, interaction.user);
     }
+
     async runQuiz(channel, user) {
         let playing = true;
         
         while (playing) {
-            const [code, country] = flags[Math.floor(Math.random() * flags.length)];
+            const [code, aliases] = flags[Math.floor(Math.random() * flags.length)];
             const flagURL = `https://flagcdn.com/w2560/${code}.png`;
+            const validAnswers = aliases.map(a => a.toLowerCase());
+            const displayName = aliases[0] || code;
 
             await channel.send({
-                content: "which one is this u silly billy",
+                content: "Guess the flag!",
                 files: [flagURL]
             });
 
@@ -53,14 +55,14 @@ class FlagQuiz extends Command {
 
                 const answer = collected.first().content.toLowerCase();
 
-                if (answer === country.toLowerCase()) {
+                if (validAnswers.includes(answer)) {
                     await channel.send(`Correct!`);
                 } else {
                     playing = false;
-                    await channel.send(`Nope! It was **${country}**`);    
+                    await channel.send(`Nope! It was **${displayName}**`);    
                 }
             } catch {
-                await channel.send(`Time's up! It was **${country}**`);
+                await channel.send(`Time's up! It was **${displayName}**`);
                 playing = false;
             }
         }
