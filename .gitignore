@@ -2,6 +2,7 @@
 node_modules
 *.code-workspace
 .env
+.vscode
 
 # Local directories/files
 

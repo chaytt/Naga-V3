@@ -3,6 +3,7 @@ const { GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
 
 require('@sapphire/plugin-logger/register');
+require('@sapphire/plugin-subcommands/register');
 require('dotenv').config({ path: __dirname + '/.env' });
 
 mongoose.connect(process.env.DB_CONNECTION_STRING)

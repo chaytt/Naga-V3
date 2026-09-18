@@ -92,7 +92,7 @@ class Utilities {
   }
 
     async sendMessage(channelOrInteraction, content, options) {
-        if (channelOrInteraction.isChatInputCommand?.()) {
+        if (channelOrInteraction.isChatInputCommand?.() || channelOrInteraction.isModalSubmit?.()) {
             if (channelOrInteraction.deferred) {
                 return await channelOrInteraction.editReply(content, options);
             } else {
@@ -103,7 +103,7 @@ class Utilities {
         return await channelOrInteraction.send(content, options);
     }
 
-  async sendSuccess(channelOrInteraction, content) {
+  async sendSuccess(channelOrInteraction, content, options = {}) {
     const embeds = [
       { 
         color: 4437377,
@@ -111,18 +111,18 @@ class Utilities {
       }
     ];
 
-    if (channelOrInteraction.isChatInputCommand?.()) {
+    if (channelOrInteraction.isChatInputCommand?.() || channelOrInteraction.isModalSubmit?.()) {
       if (channelOrInteraction.deferred) {
-        return await channelOrInteraction.editReply({ embeds: embeds });
+        return await channelOrInteraction.editReply({ embeds: embeds, ...options });
       } else {
-        return await channelOrInteraction.reply({ embeds: embeds });
+        return await channelOrInteraction.reply({ embeds: embeds, ...options });
       }
     }
 
     return await channelOrInteraction.send({ embeds: embeds });
   }
 
-  async sendError(channelOrInteraction, content) {
+  async sendError(channelOrInteraction, content, options = {}) {
     const embeds = [
       {
         color: 15747399,
@@ -130,11 +130,11 @@ class Utilities {
       }
     ];
 
-    if (channelOrInteraction.isChatInputCommand?.()) {
+    if (channelOrInteraction.isChatInputCommand?.() || channelOrInteraction.isModalSubmit?.()) {
       if (channelOrInteraction.deferred) {
-        return await channelOrInteraction.editReply({ embeds: embeds });
+        return await channelOrInteraction.editReply({ embeds: embeds, ...options });
       } else {
-        return await channelOrInteraction.reply({ embeds: embeds });
+        return await channelOrInteraction.reply({ embeds: embeds, ...options });
       }
     }
 
