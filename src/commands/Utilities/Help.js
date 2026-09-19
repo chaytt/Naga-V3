@@ -88,6 +88,23 @@ class Help extends Command {
 
     if (command.aliases && command.aliases.length > 0) fields.push({ name: 'Aliases', value: command.aliases.join(', ') });
 
+    if (command.parsedSubcommandMappings && command.parsedSubcommandMappings.length > 0) { // logic to display subcommands if present
+      const subcommands = command.parsedSubcommandMappings.flatMap((subcommand) => {
+        if (subcommand.type === 'group') {
+          return subcommand.entries.map((entry) => `${subcommand.name} ${entry.name}`);
+        }
+
+        return subcommand.name;
+      });
+
+      fields.push({
+        name: 'Subcommands',
+        value: subcommands
+          .map((subcommand) => `${this.container.prefix}${command.name} ${subcommand}`)
+          .join('\n')
+      });
+    }
+
     if (command.detailedDescription && Object.keys(command.detailedDescription).length > 0) {
       for (let [name, description] of Object.entries(command.detailedDescription)) {
         const capitalizedName = name[0].toUpperCase() + name.slice(1);
